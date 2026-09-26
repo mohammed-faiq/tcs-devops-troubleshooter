@@ -1,0 +1,8 @@
+{
+  "name": "DevOps Deployment Troubleshooter",
+  "description": "Elite single-agent deployment troubleshooting assistant. Analyzes messy deployment logs, identifies root causes, and delivers step-by-step remediation runbooks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
