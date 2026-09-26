@@ -2,7 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GoogleGenAI } from '@google/genai';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 
 dotenv.config();
 
@@ -14,13 +15,11 @@ const port = parseInt(process.env.PORT || '3000', 10);
 
 app.use(express.json({ limit: '10mb' }));
 
-const ai = new GoogleGenAI({
+// 1. Initialize LangChain LLM with the active 3.x model architecture
+const llm = new ChatGoogleGenerativeAI({
+  model: 'gemini-3.5-flash',
   apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
+  temperature: 0.1,
 });
 
 const SYSTEM_INSTRUCTION = `You are an elite IT Deployment Troubleshooting Assistant, operating as a single-agent system designed to reduce system downtime for DevOps teams.
@@ -74,16 +73,18 @@ ${logText.slice(0, 60000)}
 
 Analyze the logs above now and provide the solution strictly using the required format.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.1,
-      },
-    });
+    // 2. Format the request using LangChain Message objects
+    const messages = [
+      new SystemMessage(SYSTEM_INSTRUCTION),
+      new HumanMessage(prompt)
+    ];
 
-    const outputText = response.text || '';
+    // 3. Invoke the LangChain model
+    const response = await llm.invoke(messages);
+    
+    // 4. Extract content from the LangChain response object
+    const outputText = response.content;
+
     if (!outputText) {
       return res.status(502).json({ error: 'Empty response returned from model.' });
     }
